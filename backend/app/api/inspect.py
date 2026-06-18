@@ -25,6 +25,9 @@ async def inspect(
     vision_hints: Optional[str] = Form(
         default=None, description="Optional JSON object of detector hints."
     ),
+    annotate: bool = Form(
+        default=False, description="Save an annotated image with the defect box."
+    ),
 ) -> InspectionReport:
     image_bytes = await image.read()
     standard_bytes = await standard.read()
@@ -52,6 +55,7 @@ async def inspect(
             sensor_csv=sensor_data,
             object_name=object_name,
             vision_hints=hints,
+            annotate=annotate,
         )
     except UnsupportedDocumentError as exc:
         raise HTTPException(status_code=415, detail=str(exc)) from exc

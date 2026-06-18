@@ -43,6 +43,8 @@ def run_inspection(
     vision_hints: Optional[dict] = None,
     detector: Optional[DefectDetector] = None,
     top_k: int = 3,
+    annotate: bool = False,
+    output_dir: str = "outputs",
 ) -> InspectionReport:
     """Run the full inspection pipeline and return a structured report."""
     detector = detector or get_default_detector()
@@ -70,7 +72,7 @@ def run_inspection(
 
     # 5. Report generation.
     resolved_object = object_name or Path(image_name).stem
-    return build_report(
+    report = build_report(
         object_name=resolved_object,
         image_name=image_name,
         observation=observation,
@@ -79,3 +81,16 @@ def run_inspection(
         sensor_readings=sensor_readings,
         standard_name=standard_name,
     )
+
+    # 6. Optional annotated defect image (Phase 2).
+    if annotate and image_bytes and observation.bounding_box is not None:
+        from backend.app.vision.annotator import annotate_defect
+
+        report.annotated_image_path = annotate_defect(
+            image_bytes=image_bytes,
+            observation=observation,
+            output_dir=output_dir,
+            inspection_id=report.inspection_id,
+        )
+
+    return report
