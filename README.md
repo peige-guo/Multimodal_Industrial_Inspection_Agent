@@ -56,7 +56,9 @@ backend/app/rag/document_loader.py # txt/md/pdf text extraction
 backend/app/rag/retriever.py     # clause chunker + lexical retriever
 backend/app/vision/defect_detector.py # detector interface + heuristic impl
 backend/app/vision/yolo_detector.py # Ultralytics YOLO backend (Phase 2)
+backend/app/vision/qwen_detector.py # local Qwen2.5-VL backend (Phase 2)
 backend/app/vision/vlm_detector.py  # OpenAI-compatible VLM backend (Phase 2)
+backend/app/vision/vlm_common.py # shared VLM prompt + JSON parsing
 backend/app/vision/factory.py    # env-driven backend selection + fallback
 backend/app/vision/annotator.py  # bounding-box image annotation
 backend/app/agents/inspection_agent.py # severity/action/human-review decision
@@ -129,16 +131,23 @@ The vision step is pluggable behind the `DefectDetector` interface and selected 
 ```bash
 pip install -r backend/requirements.txt -r backend/requirements-vision.txt
 
-# YOLO
+# Local Qwen-VL (in-process, no server)
+export INSPECTION_DETECTOR=qwen
+export INSPECTION_QWEN_MODEL=Qwen/Qwen2.5-VL-3B-Instruct
+export INSPECTION_QWEN_DEVICE=auto   # cuda / mps / cpu
+
+# or YOLO
 export INSPECTION_DETECTOR=yolo
 export INSPECTION_YOLO_MODEL=runs/defect/best.pt
 
-# or a vision-language model
+# or Qwen-VL via a local OpenAI-compatible server (Ollama/vLLM)
 export INSPECTION_DETECTOR=vlm
-export INSPECTION_VLM_API_KEY=sk-...
+export INSPECTION_VLM_MODEL=qwen2.5vl
+export INSPECTION_VLM_BASE_URL=http://localhost:11434/v1
+export INSPECTION_VLM_API_KEY=ollama
 ```
 
-Backends: `heuristic` (default), `yolo` (Ultralytics), `vlm` (OpenAI-compatible), `auto`. If a selected backend's dependency/config is missing, the factory falls back to the heuristic detector so the service stays up. Pass `annotate=true` to `/api/inspect` to save a bounding-box image (`annotated_image_path`). Full details in `docs/phase2_vision.md`.
+Backends: `heuristic` (default), `yolo` (Ultralytics), `qwen` (local Qwen2.5-VL via transformers), `vlm` (OpenAI-compatible server, including Qwen on Ollama/vLLM), `auto`. If a selected backend's dependency/config is missing, the factory falls back to the heuristic detector so the service stays up. Pass `annotate=true` to `/api/inspect` to save a bounding-box image (`annotated_image_path`). Full details in `docs/phase2_vision.md`.
 
 ## Extending the MVP
 

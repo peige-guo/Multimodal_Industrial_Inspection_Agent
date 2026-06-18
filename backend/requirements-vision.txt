@@ -2,11 +2,20 @@
 # Install on top of backend/requirements.txt only when using a real model:
 #   pip install -r backend/requirements.txt -r backend/requirements-vision.txt
 
-# Image handling (YOLO input + annotated output).
+# Image handling (model input + annotated output).
 pillow>=10.3.0
 
-# YOLO detector backend (pulls in torch).
+# Local Qwen-VL backend (INSPECTION_DETECTOR=qwen), runs in-process.
+# Qwen2.5-VL support requires a recent transformers release.
+torch>=2.2.0
+torchvision>=0.17.0
+transformers>=4.49.0
+accelerate>=0.30.0
+qwen-vl-utils>=0.0.8
+
+# YOLO detector backend (INSPECTION_DETECTOR=yolo); pulls in torch.
 ultralytics>=8.2.0
 
-# Vision-Language-Model detector backend (OpenAI-compatible API).
+# Optional: only needed for INSPECTION_DETECTOR=vlm with an OpenAI-compatible
+# server (e.g. Ollama or vLLM serving Qwen-VL). Not required for local Qwen.
 openai>=1.30.0
