@@ -1,0 +1,59 @@
+{
+  "inspection_id": "insp_demo00000001",
+  "object_name": "pipeline_segment_A12",
+  "inspection_time": "2026-06-18T12:05:00+00:00",
+  "input_data_summary": "image 'pipeline_crack_serious.png', standard 'pipeline_surface_defect_standard.md', 4 sensor reading(s)",
+  "defect_type": "crack",
+  "defect_location": "longitudinal weld seam",
+  "confidence": 0.91,
+  "severity_level": "critical",
+  "recommended_action": "stop_machine",
+  "risk_explanation": "Crack longer than 5.0 mm in a load-bearing area (clause 3.2: serious defect). Critical sensor abnormality detected: temperature 85.0 C exceeds critical threshold 80.0 (clause 3.3).",
+  "standard_evidence": [
+    {
+      "clause_id": "3.2",
+      "title": "Serious Crack",
+      "text": "A crack longer than 5 mm located in a load-bearing or pressure boundary area shall be classified as a serious defect. Recommended action: repair or reject pending engineering review.",
+      "score": 7.3081
+    },
+    {
+      "clause_id": "2.1",
+      "title": "Crack",
+      "text": "A crack is a linear discontinuity on the surface. Crack length, width, and location must be recorded.",
+      "score": 6.3559
+    },
+    {
+      "clause_id": "3.1",
+      "title": "Minor Defect",
+      "text": "A defect is minor when it is superficial, shorter than 5 mm, not located in a load-bearing or pressure boundary area, and no abnormal sensor reading is present.",
+      "score": 6.0631
+    }
+  ],
+  "sensor_readings": [
+    {
+      "name": "temperature",
+      "value": 85.0,
+      "unit": "C"
+    },
+    {
+      "name": "vibration",
+      "value": 4.5,
+      "unit": "mm/s"
+    },
+    {
+      "name": "pressure_deviation",
+      "value": 7.1,
+      "unit": "%"
+    },
+    {
+      "name": "current",
+      "value": 11.8,
+      "unit": "A"
+    }
+  ],
+  "requires_human_review": true,
+  "human_review_reasons": [
+    "Severity is critical."
+  ],
+  "annotated_image_path": null
+}
