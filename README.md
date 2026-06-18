@@ -54,7 +54,11 @@ backend/app/api/inspect.py       # /api/inspect multipart endpoint
 backend/app/schemas/inspection.py# Pydantic data contract (report, defect, etc.)
 backend/app/rag/document_loader.py # txt/md/pdf text extraction
 backend/app/rag/retriever.py     # clause chunker + lexical retriever
-backend/app/vision/defect_detector.py # detector interface + heuristic MVP impl
+backend/app/vision/defect_detector.py # detector interface + heuristic impl
+backend/app/vision/yolo_detector.py # Ultralytics YOLO backend (Phase 2)
+backend/app/vision/vlm_detector.py  # OpenAI-compatible VLM backend (Phase 2)
+backend/app/vision/factory.py    # env-driven backend selection + fallback
+backend/app/vision/annotator.py  # bounding-box image annotation
 backend/app/agents/inspection_agent.py # severity/action/human-review decision
 backend/app/services/sensor_loader.py  # sensor CSV parsing + thresholds
 backend/app/services/report_generator.py # assemble InspectionReport
@@ -110,7 +114,7 @@ Upload an image + standard (+ optional sensor CSV), then view the rendered repor
 
 The `/api/inspect` request runs this deterministic pipeline (`services/workflow.py`):
 
-1. **Vision** — `DefectDetector` returns a `DefectObservation` (MVP: heuristic from filename/hints; later VLM/YOLO/SAM).
+1. **Vision** — `DefectDetector` returns a `DefectObservation` (heuristic by default; YOLO or VLM backends in Phase 2, see below).
 2. **RAG** — the standard document is parsed and chunked into clauses, then relevant clauses are retrieved lexically.
 3. **Sensors** — optional CSV is parsed; the latest reading per column is checked against critical thresholds.
 4. **Decision** — transparent rules assign severity, recommended action, and the human-review flag.
@@ -118,10 +122,28 @@ The `/api/inspect` request runs this deterministic pipeline (`services/workflow.
 
 Human review is triggered when confidence < 0.70, no standard clause matches, severity is high/critical, or sensor and visual evidence conflict.
 
+## Vision Backends (Phase 2)
+
+The vision step is pluggable behind the `DefectDetector` interface and selected via environment variables (defaults to the dependency-free heuristic):
+
+```bash
+pip install -r backend/requirements.txt -r backend/requirements-vision.txt
+
+# YOLO
+export INSPECTION_DETECTOR=yolo
+export INSPECTION_YOLO_MODEL=runs/defect/best.pt
+
+# or a vision-language model
+export INSPECTION_DETECTOR=vlm
+export INSPECTION_VLM_API_KEY=sk-...
+```
+
+Backends: `heuristic` (default), `yolo` (Ultralytics), `vlm` (OpenAI-compatible), `auto`. If a selected backend's dependency/config is missing, the factory falls back to the heuristic detector so the service stays up. Pass `annotate=true` to `/api/inspect` to save a bounding-box image (`annotated_image_path`). Full details in `docs/phase2_vision.md`.
+
 ## Extending the MVP
 
-- **Real vision:** subclass `DefectDetector` (VLM/YOLO/SAM) and return it from `get_default_detector`.
+- **Real vision:** subclass `DefectDetector` (VLM/YOLO/SAM), normalize labels via `vision/labels.py`, and register it in `vision/factory.py`.
 - **Embedding retrieval:** swap `StandardRetriever` for a FAISS/Chroma-backed retriever with the same `retrieve()` contract.
 - **LLM explanations:** layer an LLM on top of the rule-based `decide()` for ambiguous cases.
 
-See `docs/mvp_implementation_plan.md` and `docs/system_design.md` for the full design.
+See `docs/mvp_implementation_plan.md`, `docs/system_design.md`, and `docs/phase2_vision.md` for the full design.

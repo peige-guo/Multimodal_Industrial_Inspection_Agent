@@ -1,0 +1,12 @@
+# Optional Phase-2 vision dependencies.
+# Install on top of backend/requirements.txt only when using a real model:
+#   pip install -r backend/requirements.txt -r backend/requirements-vision.txt
+
+# Image handling (YOLO input + annotated output).
+pillow>=10.3.0
+
+# YOLO detector backend (pulls in torch).
+ultralytics>=8.2.0
+
+# Vision-Language-Model detector backend (OpenAI-compatible API).
+openai>=1.30.0
