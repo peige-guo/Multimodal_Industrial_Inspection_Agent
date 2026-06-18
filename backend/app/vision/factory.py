@@ -3,9 +3,10 @@
 Selection order:
 - ``INSPECTION_DETECTOR=heuristic`` (default): dependency-free stub.
 - ``INSPECTION_DETECTOR=yolo``: Ultralytics YOLO model.
-- ``INSPECTION_DETECTOR=vlm``: OpenAI-compatible vision model.
-- ``INSPECTION_DETECTOR=auto``: prefer YOLO, then VLM, then heuristic, based on
-  which is configured.
+- ``INSPECTION_DETECTOR=qwen``: local Qwen-VL model via transformers.
+- ``INSPECTION_DETECTOR=vlm``: OpenAI-compatible vision server (e.g. Ollama/vLLM).
+- ``INSPECTION_DETECTOR=auto``: prefer YOLO, then local Qwen, then a VLM server,
+  then heuristic, based on what is installed/configured.
 
 If a requested backend is misconfigured or its dependencies are missing, the
 factory logs a warning and falls back to the heuristic detector so the service
@@ -38,6 +39,19 @@ def _build_yolo(config: VisionConfig) -> DefectDetector:
     return YOLODefectDetector(config=config)
 
 
+_QWEN_DEPS = ("transformers", "qwen_vl_utils", "torch", "PIL")
+
+
+def _build_qwen(config: VisionConfig) -> DefectDetector:
+    if not _installed(*_QWEN_DEPS):
+        raise RuntimeError(
+            "transformers/qwen-vl-utils/torch/Pillow are not installed."
+        )
+    from backend.app.vision.qwen_detector import QwenVLDefectDetector
+
+    return QwenVLDefectDetector(config=config)
+
+
 def _build_vlm(config: VisionConfig) -> DefectDetector:
     if not config.vlm_api_key:
         raise RuntimeError("INSPECTION_VLM_API_KEY (or OPENAI_API_KEY) is not set.")
@@ -49,8 +63,12 @@ def _build_vlm(config: VisionConfig) -> DefectDetector:
 
 
 def _auto(config: VisionConfig) -> DefectDetector:
-    for builder, configured in ((_build_yolo, config.yolo_model_path),
-                                (_build_vlm, config.vlm_api_key)):
+    candidates = (
+        (_build_yolo, bool(config.yolo_model_path)),
+        (_build_qwen, _installed(*_QWEN_DEPS)),
+        (_build_vlm, bool(config.vlm_api_key)),
+    )
+    for builder, configured in candidates:
         if not configured:
             continue
         try:
@@ -70,6 +88,8 @@ def build_detector(config: Optional[VisionConfig] = None) -> DefectDetector:
             return HeuristicDefectDetector()
         if backend == "yolo":
             return _build_yolo(config)
+        if backend == "qwen":
+            return _build_qwen(config)
         if backend == "vlm":
             return _build_vlm(config)
         if backend == "auto":
