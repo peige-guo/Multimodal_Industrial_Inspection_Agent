@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multimodal Industrial Inspection Agent</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">IIA</span>
+      <div>
+        <h1>Multimodal Industrial Inspection Agent</h1>
+        <p class="subtitle">Image + standard + sensors &rarr; defect, severity, evidence &amp; report</p>
+      </div>
+    </div>
+    <div class="api-config">
+      <label for="apiBase">API</label>
+      <input id="apiBase" type="text" value="http://127.0.0.1:8000" />
+      <span id="apiStatus" class="status-dot" title="Backend status"></span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h2>1. Upload inputs</h2>
+      <form id="inspectForm">
+        <label class="field">
+          <span>Defect image <em>(required)</em></span>
+          <input id="image" type="file" accept="image/*" required />
+        </label>
+        <div id="imagePreviewWrap" class="preview" hidden>
+          <img id="imagePreview" alt="preview" />
+        </div>
+
+        <label class="field">
+          <span>Inspection standard <em>(.txt / .md / .pdf)</em></span>
+          <input id="standard" type="file" accept=".txt,.md,.markdown,.pdf" required />
+        </label>
+
+        <label class="field">
+          <span>Sensor CSV <em>(optional)</em></span>
+          <input id="sensor" type="file" accept=".csv" />
+        </label>
+
+        <label class="field">
+          <span>Object name <em>(optional)</em></span>
+          <input id="objectName" type="text" placeholder="e.g. pipeline_segment_A12" />
+        </label>
+
+        <details class="advanced">
+          <summary>Advanced: vision hints (JSON)</summary>
+          <p class="hint">The MVP detector is heuristic. Provide hints to simulate a real model.</p>
+          <textarea id="visionHints" rows="6" spellcheck="false">{
+  "defect_type": "crack",
+  "confidence": 0.91,
+  "length_mm": 8.0,
+  "load_bearing_area": true,
+  "location": "longitudinal weld seam"
+}</textarea>
+        </details>
+
+        <button id="submitBtn" type="submit">Run inspection</button>
+        <p id="errorMsg" class="error" hidden></p>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>2. Inspection report</h2>
+      <div id="empty" class="empty">
+        <p>No report yet. Upload an image and a standard, then run inspection.</p>
+      </div>
+      <div id="report" class="report" hidden></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
